@@ -59,9 +59,6 @@ impl Evaluable for Expr {
         }
     }
 }
-fn parser_number(input: &str) -> f64{
-    input.parse().expect("Parsing en f64 (erreur) ")
-}
 
 fn premier_nombre(phrase: &str) -> Option<f64> {
     let re = Regex::new(r"-?\d+(\.\d+)?").unwrap();
