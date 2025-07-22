@@ -45,12 +45,20 @@ impl BinOp {
 }
 
 impl Expr{
-   fn result_binop_from(input: &str,left_box:Box<Expr>,right_box:Box<Expr>,operation:BinOp)->IResult<&str,Expr>{
-       IResult::Ok((input,Expr::BinaryOp { left: left_box , op: operation , right: right_box }))
+   fn result_binop_from(input: &str,left_box:Box<Expr>,right_box:Box<Expr>,operation:BinOp)->IResult<&str,Box<Expr>>{
+       IResult::Ok((input,Box::new(Expr::BinaryOp { left: left_box , op: operation , right: right_box })))
    }
-    fn result_number(input:&str,number:u32)->IResult<&str,Expr>{
-        let result=(input,Expr::Number(number));
-       IResult::Ok(result)
+   fn some_box_binop_from(left_box:Box<Expr>,right_box:Box<Expr>,operation:BinOp)->Option<Box<Expr>>{
+        Some(Box::new(Expr::BinaryOp { left: left_box , op: operation , right: right_box }))
+   }
+    fn result_number(input:&str,number:u32)->IResult<&str,Box<Expr>>{
+        let result=(input,Box::new(Expr::Number(number)));
+        IResult::Ok(result)       
+    }
+    fn result_from_current(input: &str,current_expr:Box<Expr>)->IResult<&str,Box<Expr>>{
+        
+        IResult::Ok((input,current_expr))
+           
     }
 }
 impl Expr {
@@ -102,84 +110,62 @@ fn scantoken(input:&str) -> IResult<&str,&str>{
         scan_digit,
         scan_plus,
         scan_moins
-    )).parse(input)
+    )).parse(input.trim())
 
     
 }
 
-fn parse_expr(input:&str)->IResult<&str,Expr>{
-    let ( mut reste,mut next_token)=scantoken(input)?;
-    if  next_token.parse::<u32>().is_ok() {
-        println!("next_token : {next_token}");
-        let n=u32::from_str(next_token).unwrap();
-        let expr_left=Expr::result_number(input, n);
-        if reste.is_empty() {
-            return expr_left;
+fn parse_expr(mut input: &str)->IResult<&str,Box<Expr>>{
+    let mut next_token="";
+
+    let mut current_expr:Option<Box<Expr>>=Option::Some(parse_term(Box::new(input))?.1);
+    loop {
+        if input.is_empty() {
+            match current_expr {
+                Some(result) =>{
+                    return Expr::result_from_current(input, result);
+                },
+                None => {
+                    return   Err(nom::Err::Error(Error::new(input, nom::error::ErrorKind::Digit)));
+                }
+            }
         }
-        
-        (reste,next_token)=scantoken(reste)?;
-        if next_token=="-" || next_token=="+" {
-            println!("Reccurssion:");
-            let left_box=Box::new(expr_left?.1);
-            let right_box=Box::new(parse_expr(reste)?.1);
-       
-            return Expr::result_binop_from(input, left_box, right_box, BinOp::from_str(next_token));
+
+        (input,next_token)=scantoken(input)?;
+         if next_token=="+" || next_token=="-" {
+
+           match current_expr {
+            Some(left) => {
+               
+                current_expr=Expr::some_box_binop_from(left,parse_term(Box::new(input))?.1,BinOp::from_str(next_token));
+              
+            },
+            None => {
+                return   Err(nom::Err::Error(Error::new(input, nom::error::ErrorKind::Digit)));
+            },
             
+            }
         }
     }
-    
-    Err(nom::Err::Error(Error::new(input, nom::error::ErrorKind::Digit)))
+
 }
+fn parse_term(mut input:Box<&str>)->IResult<&str,Box<Expr>>{
+    let (reste,next_token)=scantoken(*input)?;
 
-
-
-
-fn parse_term(input:&str)->IResult<&str,Expr>{
-    let (_,next_token)=scantoken(input)?;
 
     let n=u32::from_str(next_token).unwrap();
 
-    let term_result=Expr::result_number(input, n);
+    let term_result=Expr::result_number(*input, n);
     
     if next_token.parse::<u32>().is_ok() {
+        *input=reste;
         return term_result;
     }
 
-    Err(nom::Err::Error(Error::new(input, nom::error::ErrorKind::Digit)))
-}
-fn parse_factor(input:&str)->IResult<&str,Expr>{
-    let (reste,next_token)=scantoken(input)?;
-    match next_token.trim() {
-        "("=>{
-            let new_result=parse_expr(reste);
-            match new_result {
-                Ok((current_token,_)) => {
-                    if current_token.trim()==")" {
-                        new_result
-                    }else {
-                        Err(nom::Err::Error(Error::new(input, nom::error::ErrorKind::Digit)))
-                    }
-                },
-                Result::Err(err) => Result::Err(err),
-            }
-          
-           
-        },
-        "-"=>{
-            let (new_reste,_)=scantoken(reste)?;
-            parse_factor(new_reste)
-        },
-        t => {
-            let a=u32::from_str(t).map_err(|_|{
-                nom::Err::Error(Error::new(t, nom::error::ErrorKind::Digit))
-            })?;
-            IResult::Ok((t,Expr::Number(a)))
-        } 
-    }
-
+    Err(nom::Err::Error(Error::new(*input, nom::error::ErrorKind::Digit)))
 }
 fn main(){
-    let a="12-1+1";
+    let a="12   - 1  - 42";
     let v=parse_expr(a);
     let g: i32=v.unwrap().1.eval();
     println!("{:?}",g);
