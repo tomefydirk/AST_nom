@@ -91,25 +91,25 @@ fn scan_plus(input:&str)-> IResult<&str,&str>{
 fn scan_moins(input:&str)-> IResult<&str,&str>{
     tag("-")(input)
 }
+fn parens0(input:&str)-> IResult<&str,&str>{
+    tag("(")(input)
+}
+fn parens1(input:&str)-> IResult<&str,&str>{
+    tag(")")(input)
+}
+
 fn scan_digit(input:&str)-> IResult<&str,&str>{
     digit1(input)
 }
-fn parse_without_parens(input: &str) -> IResult<&str, &str> {
-   let (input_1,_)=tag("(").parse(input)?; 
-   let (input_farany,out_put)=take_while1(|c: char| c != ')').parse(input_1)?;
-   let (f,_)=tag(")").parse(input_farany)?;
-   IResult::Ok((f,out_put))
-}
-
-
-
 
 fn scantoken(input:&str) -> IResult<&str,&str>{
 
     alt((
         scan_digit,
         scan_plus,
-        scan_moins
+        scan_moins,
+        parens0,
+        parens1
     )).parse(input.trim())
 
     
@@ -150,23 +150,48 @@ fn parse_expr(mut input: &str)->IResult<&str,Box<Expr>>{
 
 }
 fn parse_term(mut input:Box<&str>)->IResult<&str,Box<Expr>>{
-    let (reste,next_token)=scantoken(*input)?;
+   parse_factor(input)
+}
+fn parse_factor(mut input:Box<&str>)->IResult<&str,Box<Expr>>{
+    println!("Parse factor : input {input}");
 
-
-    let n=u32::from_str(next_token).unwrap();
-
-    let term_result=Expr::result_number(*input, n);
     
-    if next_token.parse::<u32>().is_ok() {
-        *input=reste;
-        return term_result;
-    }
+    let mut next_token="";
 
-    Err(nom::Err::Error(Error::new(*input, nom::error::ErrorKind::Digit)))
+    (*input,next_token)=scantoken(*input)?;
+
+    if next_token.parse::<u32>().is_ok(){
+         let n=u32::from_str(next_token).unwrap();
+        println!("Return done!");
+         Expr::result_number(*input, n)
+    }else if next_token=="("{
+        let a=parse_expr(*input)?;
+       (*input ,next_token)=scantoken(a.0)?;
+        if next_token==")" {
+            return Expr::result_from_current(*input, a.1);
+        }else {
+
+    //rintln!("else : {next_token}");
+
+            return Err(nom::Err::Error(Error::new(*input, nom::error::ErrorKind::Digit)));
+        }
+    }else if next_token=="-"{
+            println!("input {input}");
+            return IResult::Ok((*input,Box::new(Expr::Negate(parse_factor(input)?.1))));
+
+    }else {
+
+   // println!("here");
+
+            return Err(nom::Err::Error(Error::new(*input, nom::error::ErrorKind::Digit)));
+    }
+    
 }
 fn main(){
-    let a="12   - 1  - 42";
+    let a="-4";
     let v=parse_expr(a);
+
+    println!("{:?}",v);
     let g: i32=v.unwrap().1.eval();
     println!("{:?}",g);
 }
