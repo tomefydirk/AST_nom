@@ -165,7 +165,49 @@ fn parse_expr(mut input: &str)->IResult<&str,Box<Expr>>{
 
 }
 fn parse_term(mut input:Box<&str>)->IResult<&str,Box<Expr>>{
-   parse_factor(input)
+  parse_factor(input)
+}
+fn parse_term_test(mut input:&str)->IResult<&str,Box<Expr>>{
+   let mut next_token="";
+
+
+    let perm=parse_term(Box::new(input));
+    let (aff_perm,real_perm)=perm?;
+  
+    let mut current_expr:Option<Box<Expr>>=Option::Some(real_perm);
+
+    input=aff_perm;
+    loop {
+        (input,next_token)=scantoken(input)?;
+        if input.is_empty() || next_token=="+" || next_token=="-" {
+            match current_expr {
+                Some(result) =>{
+                    return Expr::result_from_current(input, result);
+                },
+                None => {
+                    return   Err(nom::Err::Error(Error::new(input, nom::error::ErrorKind::Digit)));
+                }
+            }
+        }
+
+     
+         if next_token=="*" || next_token=="/" {
+
+           match current_expr {
+            Some(left) => {
+               
+                current_expr=Expr::some_box_binop_from(left,parse_term(Box::new(input))?.1,BinOp::from_str(next_token));
+              
+            },
+            None => {
+                return   Err(nom::Err::Error(Error::new(input, nom::error::ErrorKind::Digit)));
+            },
+            
+            }
+        }
+       
+    }
+
 }
 fn parse_factor(mut input:Box<&str>)->IResult<&str,Box<Expr>>{
     println!("Parse factor : input {input}");
@@ -205,8 +247,8 @@ fn parse_factor(mut input:Box<&str>)->IResult<&str,Box<Expr>>{
     
 }
 fn main(){
-    let a="--1+1";
-    let v=parse_expr(a);
+    let a="2*3*2+3";
+    let v=parse_term_test(a);
 
     println!("{:?}",v);
     let g: i32=v.unwrap().1.eval();
