@@ -118,7 +118,13 @@ fn scantoken(input:&str) -> IResult<&str,&str>{
 fn parse_expr(mut input: &str)->IResult<&str,Box<Expr>>{
     let mut next_token="";
 
-    let mut current_expr:Option<Box<Expr>>=Option::Some(parse_term(Box::new(input))?.1);
+
+    let perm=parse_term(Box::new(input));
+    let (aff_perm,real_perm)=perm?;
+  
+    let mut current_expr:Option<Box<Expr>>=Option::Some(real_perm);
+
+    input=aff_perm;
     loop {
         if input.is_empty() {
             match current_expr {
@@ -131,7 +137,7 @@ fn parse_expr(mut input: &str)->IResult<&str,Box<Expr>>{
             }
         }
 
-        (input,next_token)=scantoken(input)?;
+     
          if next_token=="+" || next_token=="-" {
 
            match current_expr {
@@ -146,6 +152,7 @@ fn parse_expr(mut input: &str)->IResult<&str,Box<Expr>>{
             
             }
         }
+        (input,next_token)=scantoken(input)?;
     }
 
 }
@@ -161,9 +168,9 @@ fn parse_factor(mut input:Box<&str>)->IResult<&str,Box<Expr>>{
     (*input,next_token)=scantoken(*input)?;
 
     if next_token.parse::<u32>().is_ok(){
-         let n=u32::from_str(next_token).unwrap();
+        let n=u32::from_str(next_token).unwrap();
         println!("Return done!");
-         Expr::result_number(*input, n)
+        Expr::result_number(*input, n)
     }else if next_token=="("{
         let a=parse_expr(*input)?;
        (*input ,next_token)=scantoken(a.0)?;
@@ -176,8 +183,10 @@ fn parse_factor(mut input:Box<&str>)->IResult<&str,Box<Expr>>{
             return Err(nom::Err::Error(Error::new(*input, nom::error::ErrorKind::Digit)));
         }
     }else if next_token=="-"{
-            println!("input {input}");
-            return IResult::Ok((*input,Box::new(Expr::Negate(parse_factor(input)?.1))));
+            println!("Negate : {input}");
+            let perm=parse_factor(input);
+            let (aff_perm,real_perm)=perm?;
+            return IResult::Ok((aff_perm,Box::new(Expr::Negate(real_perm))));
 
     }else {
 
@@ -188,7 +197,7 @@ fn parse_factor(mut input:Box<&str>)->IResult<&str,Box<Expr>>{
     
 }
 fn main(){
-    let a="-4";
+    let a="--1+1";
     let v=parse_expr(a);
 
     println!("{:?}",v);
