@@ -91,6 +91,12 @@ fn scan_plus(input:&str)-> IResult<&str,&str>{
 fn scan_moins(input:&str)-> IResult<&str,&str>{
     tag("-")(input)
 }
+fn scan_div(input:&str)-> IResult<&str,&str>{
+    tag("/")(input)
+}
+fn scan_fois(input:&str)-> IResult<&str,&str>{
+    tag("*")(input)
+}
 fn parens0(input:&str)-> IResult<&str,&str>{
     tag("(")(input)
 }
@@ -108,6 +114,8 @@ fn scantoken(input:&str) -> IResult<&str,&str>{
         scan_digit,
         scan_plus,
         scan_moins,
+        scan_div,
+        scan_fois,
         parens0,
         parens1
     )).parse(input.trim())
