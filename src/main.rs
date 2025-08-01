@@ -262,7 +262,7 @@ fn parse_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
 }
 
 fn main() {
-    let a = "V(3+3*2sq)";
+    let a = "V(3+3*2)";
     let v = parse_expr(a);
 
     println!("{:?}", v);
