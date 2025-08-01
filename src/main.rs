@@ -323,7 +323,7 @@ fn parse_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
 }
 
 fn main() {
-    let a = "2 + -((2*2))*4";
+    let a = "2 + -(2*2)*4 +16";
     let v = parse_expr(a);
 
     println!("{:?}", v);
