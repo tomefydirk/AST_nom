@@ -1,6 +1,6 @@
-
 use std::{ str::FromStr};
 use nom::character::complete::space0;
+//use nom::combinator::opt;
 use nom::error::{Error};
 use nom::{
     IResult, Parser,
@@ -8,16 +8,19 @@ use nom::{
     bytes::complete::{tag},
     character::complete::digit1,
 };
-
+mod mathtools;
+use mathtools::*;
 #[derive(Debug)]
 pub enum Expr {
-    Number(u32),
+    Number(f64),
     BinaryOp {
         left: Box<Expr>,
         op: BinOp,
         right: Box<Expr>,
     },
     Negate(Box<Expr>),
+    Ln(Box<Expr>),
+    Sqrt(Box<Expr>)
 }
 
 #[derive(Debug)]
@@ -48,18 +51,40 @@ impl Expr {
             right: right_box,
         })
     }
-    fn result_number(input: &str, number: u32) -> IResult<&str, Box<Expr>> {
+
+    fn result_number(input: &str, number: f64) -> IResult<&str, Box<Expr>> {
         let result = (input, Box::new(Expr::Number(number)));
         IResult::Ok(result)
     }
+
     fn result_from_current(input: &str, current_expr: Box<Expr>) -> IResult<&str, Box<Expr>> {
         IResult::Ok((input, current_expr))
     }
+
+    fn box_factorop_from(current_expr: Box<Expr>,token:&str) -> Box<Expr> {
+
+        match token {
+            "V"=>{
+                 Box::new(Expr::Sqrt(current_expr))
+            },
+            "ln"=>{
+                 Box::new(Expr::Ln(current_expr))
+            },
+            "-"=>{
+                 Box::new(Expr::Negate(current_expr))
+            },
+            a=>{
+                println!("operateur non trouvé :: {a}");
+                Box::new(Expr::Negate(current_expr))
+            }
+        }
+     
+    }
 }
 impl Expr {
-    pub fn eval(&self) -> i32 {
+    pub fn eval(&self) -> f64 {
         match self {
-            Expr::Number(n) => *n as i32,
+            Expr::Number(n) => *n ,
             Expr::BinaryOp { left, op, right } => {
                 let l = left.eval();
                 let r = right.eval();
@@ -68,7 +93,7 @@ impl Expr {
                     BinOp::Sub => l - r,
                     BinOp::Mul => l * r,
                     BinOp::Div => {
-                        if r == 0 {
+                        if r == 0.0 {
                             panic!("Division par zéro !");
                         }
                         l / r
@@ -76,6 +101,8 @@ impl Expr {
                 }
             }
             Expr::Negate(expr) => -expr.eval(),
+            Expr::Ln(expr) => my_ln(expr.eval()),
+            Expr::Sqrt(expr) => my_sqrt(expr.eval())
         }
     }
 }
@@ -98,14 +125,36 @@ fn parens0(input: &str) -> IResult<&str, &str> {
 fn parens1(input: &str) -> IResult<&str, &str> {
     tag(")")(input)
 }
-
 fn scan_digit(input: &str) -> IResult<&str, &str> {
     digit1(input)
 }
 
+/*----optional----*/
+
+fn scan_ln(input: &str)-> IResult<&str, &str>{
+    tag("ln")(input)
+}
+fn scan_sqrt(input: &str)-> IResult<&str, &str>{
+    tag("V")(input)
+}
+/* 
+fn scan_float(input: &str) -> IResult<&str, f64> {
+   
+    let (rest, first_part) = digit1(input)?;    
+    let (rest2, point) = opt(tag(".")).parse(rest)?;
+    if point.is_some() {
+        let (rest3, second_part) = digit1(rest2)?;
+        Ok((rest3, format!("{first_part}.{second_part}").parse().map_err(|_| nom::Err::Error(nom::error::Error::new(input, nom::error::ErrorKind::Digit)))? ))
+    } else {
+        Ok((rest, format!("{first_part}.0").parse().map_err(|_| nom::Err::Error(nom::error::Error::new(input, nom::error::ErrorKind::Digit)))? ))
+    }
+}
+*/
+
+
 fn scantoken(input: &str) -> IResult<&str, &str> {
     alt((
-        scan_digit, scan_plus, scan_moins, scan_div, scan_fois, parens0, parens1, space0,
+        scan_ln,scan_sqrt,scan_digit, scan_plus, scan_moins, scan_div, scan_fois, parens0, parens1, space0
     ))
     .parse(input.trim())
 }
@@ -195,15 +244,15 @@ fn parse_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
 
     (input, next_token) = scantoken(input)?;
 
-    if next_token.parse::<u32>().is_ok() {
-        let n = u32::from_str(next_token).unwrap();
+    if next_token.parse::<f64>().is_ok() {
+        let n = f64::from_str(next_token).unwrap();
         Expr::result_number(input, n)
     } else if next_token == "(" {
         return parse_real_factor(input);
-    } else if next_token == "-" {
+    } else if next_token == "-" || next_token=="V" || next_token=="ln"{
         let perm = parse_factor(input);
         let (aff_perm, real_perm) = perm?;
-        return IResult::Ok((aff_perm, Box::new(Expr::Negate(real_perm))));
+        return IResult::Ok((aff_perm, Expr::box_factorop_from(real_perm, next_token)));
     } else {
         return Err(nom::Err::Error(Error::new(
             input,
@@ -213,10 +262,21 @@ fn parse_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
 }
 
 fn main() {
-    let a = "2*2*2+(2)";
+    let a = "V(3+3*2sq)";
     let v = parse_expr(a);
 
     println!("{:?}", v);
-    let g: i32 = v.unwrap().1.eval();
-    println!("{:?}", g);
+    let g: f64 = v.unwrap().1.eval();
+   println!("{:?}", g); 
+
+ 
+   /* match scan_float("2.00001+") {
+        Ok((input,float)) =>{
+            println!("{float},{input}");
+        },
+        Err(_) => {
+            println!("error")
+        },
+    } */
+
 }
