@@ -195,10 +195,10 @@ fn parse_term(mut input: &str) -> IResult<&str, Box<Expr>> {
     let mut current_expr: Option<Box<Expr>> = Option::Some(real_perm);
 
     input = aff_perm;
-  //  println!("input en entrée de parse_term :: {input}");
+    //  println!("input en entrée de parse_term :: {input}");
     loop {
         let scaned = scantoken(input)?;
-        if scaned.1 == "+" || scaned.1 == "-" || scaned.1==")"{
+        if scaned.1 == "+" || scaned.1 == "-" || scaned.1 == ")" {
             match current_expr {
                 Some(result) => {
                     return Expr::result_from_current(input, result);
@@ -257,9 +257,9 @@ fn parse_real_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
     let mut current_expr: Option<Box<Expr>> = Option::Some(real_perm);
 
     input = aff_perm;
-  //  println!("input_expr:{input}");
+    //  println!("input_expr:{input}");
     loop {
-        if next_token == ")"  {
+        if next_token == ")" {
             match current_expr {
                 Some(result) => {
                     println!("parse real factor done ({next_token} , {input}) ");
@@ -327,6 +327,6 @@ fn main() {
     let v = parse_expr(a);
 
     println!("{:?}", v);
-   let g: i32 = v.unwrap().1.eval();
+    let g: i32 = v.unwrap().1.eval();
     println!("{:?}", g);
 }
