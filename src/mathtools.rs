@@ -1,9 +1,5 @@
 pub fn my_abs(nb: f64) -> f64 {
-    if nb < 0.0 {
-        -nb
-    } else {
-        nb
-    }
+    if nb < 0.0 { -nb } else { nb }
 }
 pub fn my_sqrt(nb: f64) -> f64 {
     if nb < 0.0 {
@@ -21,14 +17,13 @@ pub fn my_sqrt(nb: f64) -> f64 {
     xn
 }
 pub fn my_ln(nb: f64) -> f64 {
-
     if nb <= 0.0 {
         panic!("error ln ne supporte les nombres inférrieurs à 0(ou égale)");
     }
 
     let mut a = nb;
     let mut count = 0;
-    
+
     let epsilon = 0.0000000001;
     while my_abs(a - 1.0) > epsilon {
         a = my_sqrt(a);
