@@ -1,21 +1,12 @@
-use core::num;
-use std::cell::RefCell;
-use std::rc::Rc;
-use std::slice::RSplit;
-use std::{char, result, str::FromStr};
 
-use nom::Input;
+use std::{ str::FromStr};
 use nom::character::complete::space0;
-use nom::error::{Error, ParseError};
-use nom::sequence::delimited;
+use nom::error::{Error};
 use nom::{
-    Err, IResult, Parser,
+    IResult, Parser,
     branch::alt,
-    bytes::complete::{tag, take_while1},
-    character::complete::char,
+    bytes::complete::{tag},
     character::complete::digit1,
-    combinator::opt,
-    sequence::pair,
 };
 
 #[derive(Debug)]
@@ -49,31 +40,13 @@ impl BinOp {
 }
 
 impl Expr {
-    fn result_binop_from(
-        input: &str,
-        left_box: Box<Expr>,
-        right_box: Box<Expr>,
-        operation: BinOp,
-    ) -> IResult<&str, Box<Expr>> {
-        IResult::Ok((
-            input,
-            Box::new(Expr::BinaryOp {
-                left: left_box,
-                op: operation,
-                right: right_box,
-            }),
-        ))
-    }
-    fn some_box_binop_from(
-        left_box: Box<Expr>,
-        right_box: Box<Expr>,
-        operation: BinOp,
-    ) -> Option<Box<Expr>> {
-        Some(Box::new(Expr::BinaryOp {
+  
+    fn box_binop_from(left_box: Box<Expr>, right_box: Box<Expr>, operation: BinOp) -> Box<Expr> {
+        Box::new(Expr::BinaryOp {
             left: left_box,
             op: operation,
             right: right_box,
-        }))
+        })
     }
     fn result_number(input: &str, number: u32) -> IResult<&str, Box<Expr>> {
         let result = (input, Box::new(Expr::Number(number)));
@@ -131,9 +104,6 @@ fn scan_digit(input: &str) -> IResult<&str, &str> {
 }
 
 fn scantoken(input: &str) -> IResult<&str, &str> {
-    if input.is_empty() {
-        // println!("input.empty");
-    }
     alt((
         scan_digit, scan_plus, scan_moins, scan_div, scan_fois, parens0, parens1, space0,
     ))
@@ -142,179 +112,99 @@ fn scantoken(input: &str) -> IResult<&str, &str> {
 
 fn parse_expr(mut input: &str) -> IResult<&str, Box<Expr>> {
     let mut next_token = "";
-
-    println!("voici la fonction parse_expr");
     let perm = parse_term(input);
     let (aff_perm, real_perm) = perm?;
 
-    let mut current_expr: Option<Box<Expr>> = Option::Some(real_perm);
+    let mut current_expr: Box<Expr> = real_perm;
 
     input = aff_perm;
-    println!("input_expr:{input}");
+
     loop {
         if input.is_empty() {
-            match current_expr {
-                Some(result) => {
-                    return Expr::result_from_current(input, result);
-                }
-                None => {
-                    return Err(nom::Err::Error(Error::new(
-                        input,
-                        nom::error::ErrorKind::Digit,
-                    )));
-                }
-            }
+            return Expr::result_from_current(input, current_expr);
         }
-
         if next_token == "+" || next_token == "-" {
             let scaned = parse_term(input)?;
             input = scaned.0;
-            match current_expr {
-                Some(left) => {
-                    current_expr =
-                        Expr::some_box_binop_from(left, scaned.1, BinOp::from_str(next_token));
-                }
-                None => {
-                    return Err(nom::Err::Error(Error::new(
-                        input,
-                        nom::error::ErrorKind::Digit,
-                    )));
-                }
-            }
+            current_expr =
+                Expr::box_binop_from(current_expr, scaned.1, BinOp::from_str(next_token));
         }
 
         (input, next_token) = scantoken(input)?;
     }
 }
+
 fn parse_term(mut input: &str) -> IResult<&str, Box<Expr>> {
-    let mut next_token = "";
+    let mut next_token;
 
     let perm = parse_factor(input);
     let (aff_perm, real_perm) = perm?;
 
-    let mut current_expr: Option<Box<Expr>> = Option::Some(real_perm);
+    let mut current_expr: Box<Expr> = real_perm;
 
     input = aff_perm;
-    //  println!("input en entrée de parse_term :: {input}");
+
     loop {
         let scaned = scantoken(input)?;
         if scaned.1 == "+" || scaned.1 == "-" || scaned.1 == ")" {
-            match current_expr {
-                Some(result) => {
-                    return Expr::result_from_current(input, result);
-                }
-                None => {
-                    return Err(nom::Err::Error(Error::new(
-                        input,
-                        nom::error::ErrorKind::Digit,
-                    )));
-                }
-            }
+            return Expr::result_from_current(input, current_expr);
         } else {
-            println!("(input,next_token) :: {input} , {next_token}");
+
             (input, next_token) = scaned;
         }
 
         if input.is_empty() {
-            match current_expr {
-                Some(result) => {
-                    return Expr::result_from_current(input, result);
-                }
-                None => {
-                    return Err(nom::Err::Error(Error::new(
-                        input,
-                        nom::error::ErrorKind::Digit,
-                    )));
-                }
-            }
+            return Expr::result_from_current(input, current_expr);
         }
         if next_token == "*" || next_token == "/" {
-            match current_expr {
-                Some(left) => {
-                    current_expr = Expr::some_box_binop_from(
-                        left,
-                        parse_factor(input)?.1,
-                        BinOp::from_str(next_token),
-                    );
-                }
-                None => {
-                    return Err(nom::Err::Error(Error::new(
-                        input,
-                        nom::error::ErrorKind::Digit,
-                    )));
-                }
-            }
+            current_expr = Expr::box_binop_from(
+                current_expr,
+                parse_factor(input)?.1,
+                BinOp::from_str(next_token),
+            );
         }
     }
 }
 fn parse_real_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
     let mut next_token = "";
 
-    //  println!("voici la fonction parse_expr");
     let perm = parse_term(input);
     let (aff_perm, real_perm) = perm?;
 
-    let mut current_expr: Option<Box<Expr>> = Option::Some(real_perm);
+    let mut current_expr: Box<Expr> = real_perm;
 
     input = aff_perm;
-    //  println!("input_expr:{input}");
+
     loop {
         if next_token == ")" {
-            match current_expr {
-                Some(result) => {
-                    println!("parse real factor done ({next_token} , {input}) ");
-                    return Expr::result_from_current(input, result);
-                }
-                None => {
-                    return Err(nom::Err::Error(Error::new(
-                        input,
-                        nom::error::ErrorKind::Digit,
-                    )));
-                }
-            }
+            return Expr::result_from_current(input, current_expr);
         }
 
         if next_token == "+" || next_token == "-" {
             let scaned = parse_term(input)?;
             input = scaned.0;
-            match current_expr {
-                Some(left) => {
-                    current_expr =
-                        Expr::some_box_binop_from(left, scaned.1, BinOp::from_str(next_token));
-                }
-                None => {
-                    return Err(nom::Err::Error(Error::new(
-                        input,
-                        nom::error::ErrorKind::Digit,
-                    )));
-                }
-            }
+            current_expr =
+                Expr::box_binop_from(current_expr, scaned.1, BinOp::from_str(next_token));
         }
 
         (input, next_token) = scantoken(input)?;
     }
 }
 fn parse_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
-    // println!("Parse factor : input {input}");
-
-    let mut next_token = "";
+    let next_token;
 
     (input, next_token) = scantoken(input)?;
 
     if next_token.parse::<u32>().is_ok() {
         let n = u32::from_str(next_token).unwrap();
-        // println!("Return done!");
         Expr::result_number(input, n)
     } else if next_token == "(" {
         return parse_real_factor(input);
     } else if next_token == "-" {
-        // println!("Negate : {input}");
         let perm = parse_factor(input);
         let (aff_perm, real_perm) = perm?;
         return IResult::Ok((aff_perm, Box::new(Expr::Negate(real_perm))));
     } else {
-        // println!("here");
-
         return Err(nom::Err::Error(Error::new(
             input,
             nom::error::ErrorKind::Digit,
@@ -323,7 +213,7 @@ fn parse_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
 }
 
 fn main() {
-    let a = "2*2 +- (2*2) +2 -7*1 +((1))";
+    let a = "2*2*2+(2)";
     let v = parse_expr(a);
 
     println!("{:?}", v);
