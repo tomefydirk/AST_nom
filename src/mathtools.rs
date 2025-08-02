@@ -4,7 +4,7 @@ pub fn my_abs(nb: f64) -> f64 {
 pub fn my_sqrt(nb: f64) -> f64 {
     if nb < 0.0 {
         panic!("error sqrt ne supporte pas les nombres inférieurs à 0");
-    }else if nb==0.0 {
+    } else if nb == 0.0 {
         return 0.0;
     }
     let mut xn = nb / 2.0;

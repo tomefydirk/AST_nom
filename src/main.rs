@@ -155,16 +155,16 @@ fn parse_expr(mut input: &str) -> IResult<&str, Box<Expr>> {
     input = aff_perm;
 
     loop {
-        if input.is_empty() {
-            return Expr::result_from_current(input, current_expr);
-        }
+      
         if next_token == "+" || next_token == "-" {
             let scaned = parse_term(input)?;
             input = scaned.0;
             current_expr =
                 Expr::box_binop_from(current_expr, scaned.1, BinOp::from_str(next_token));
         }
-
+        if input.is_empty() || input.starts_with(")") {
+            return Expr::result_from_current(input, current_expr);
+        }
         (input, next_token) = scantoken(input)?;
     }
 }
@@ -179,9 +179,12 @@ fn parse_term(mut input: &str) -> IResult<&str, Box<Expr>> {
 
     input = aff_perm;
 
+    if input.starts_with(')'){
+        return Expr::result_from_current(input, current_expr);   
+    }
     loop {
         let scaned = scantoken(input)?;
-        if scaned.1 == "+" || scaned.1 == "-" || scaned.1 == ")" {
+        if scaned.1 == "+" || scaned.1 == "-"  {
             return Expr::result_from_current(input, current_expr);
         } else {
             (input, next_token) = scaned;
@@ -199,33 +202,9 @@ fn parse_term(mut input: &str) -> IResult<&str, Box<Expr>> {
         }
     }
 }
-fn parse_real_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
-    let mut next_token = "";
 
-    let perm = parse_term(input);
-    let (aff_perm, real_perm) = perm?;
-
-    let mut current_expr: Box<Expr> = real_perm;
-
-    input = aff_perm;
-
-    loop {
-        if next_token == ")" {
-            return Expr::result_from_current(input, current_expr);
-        }
-
-        if next_token == "+" || next_token == "-" {
-            let scaned = parse_term(input)?;
-            input = scaned.0;
-            current_expr =
-                Expr::box_binop_from(current_expr, scaned.1, BinOp::from_str(next_token));
-        }
-
-        (input, next_token) = scantoken(input)?;
-    }
-}
 fn parse_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
-    let next_token;
+    let mut next_token;
 
     (input, next_token) = scantoken(input)?;
 
@@ -233,7 +212,21 @@ fn parse_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
         let n = f64::from_str(next_token).unwrap();
         Expr::result_number(input, n)
     } else if next_token == "(" {
-        return parse_real_factor(input);
+       println!("input::{input}");
+        let scaned = parse_expr(input)?;
+        input = scaned.0;
+
+        (input, next_token) = scantoken(input)?;
+
+        if next_token == ")" {
+            return Expr::result_from_current(input, scaned.1);
+        } else {
+            println!("HERE {next_token}");
+            return Err(nom::Err::Error(Error::new(
+                input,
+                nom::error::ErrorKind::Digit,
+            )));
+        }
     } else if next_token == "-" || next_token == "V" || next_token == "ln" {
         let perm = parse_factor(input);
         let (aff_perm, real_perm) = perm?;
@@ -247,7 +240,7 @@ fn parse_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
 }
 
 fn main() {
-    let a = "ln(12-7)";
+    let a = "(2+3)*2-10";
     let v = parse_expr(a);
 
     println!("{:?}", v);
