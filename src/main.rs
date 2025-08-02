@@ -155,7 +155,6 @@ fn parse_expr(mut input: &str) -> IResult<&str, Box<Expr>> {
     input = aff_perm;
 
     loop {
-      
         if next_token == "+" || next_token == "-" {
             let scaned = parse_term(input)?;
             input = scaned.0;
@@ -179,12 +178,12 @@ fn parse_term(mut input: &str) -> IResult<&str, Box<Expr>> {
 
     input = aff_perm;
 
-    if input.starts_with(')'){
-        return Expr::result_from_current(input, current_expr);   
+    if input.starts_with(')') {
+        return Expr::result_from_current(input, current_expr);
     }
     loop {
         let scaned = scantoken(input)?;
-        if scaned.1 == "+" || scaned.1 == "-"  {
+        if scaned.1 == "+" || scaned.1 == "-" {
             return Expr::result_from_current(input, current_expr);
         } else {
             (input, next_token) = scaned;
@@ -212,7 +211,7 @@ fn parse_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
         let n = f64::from_str(next_token).unwrap();
         Expr::result_number(input, n)
     } else if next_token == "(" {
-       println!("input::{input}");
+        println!("input::{input}");
         let scaned = parse_expr(input)?;
         input = scaned.0;
 
