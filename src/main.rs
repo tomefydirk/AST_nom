@@ -4,6 +4,7 @@ use nom::{IResult, Parser, branch::alt, bytes::complete::tag, character::complet
 use std::str::FromStr;
 mod mathtools;
 use mathtools::*;
+mod stringtool;
 
 //RULES
 /*
@@ -15,6 +16,7 @@ E:Expression
 T:Term
 F:Factor
 */
+
 #[derive(Debug)]
 pub enum Expr {
     Number(f64),
