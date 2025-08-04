@@ -7,8 +7,8 @@ use mathtools::*;
 
 //RULES
 /*
-E : E - T  | E + T
-T : F*T    | F/T
+E : E - T  | E + T | T
+T : F*T    | F/T | F
 F : Number | (E) | -E | lnE | VE
 
 E:Expression
