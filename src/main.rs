@@ -252,30 +252,29 @@ fn main() {
 
     // RESULTAT / OUTPUT:
     let v = parse_expr(a);
+    /*
+        vous pouver aussi tester:
 
-    /*  ---REMARQUE :
-                    Si vouler tester (parse_term) ou (parse_factor) remplacer cette condition!!
+
+            let v = parse_term(a);
+                    ou 
+            let v = parse_factor(a);
+
+        quels est la différence d'après vous ?
      */
+
+    
     match v {
         Ok((rest, expr)) => {
-            if rest.is_empty() {
+           
                 println!("{:?}", expr);
                 let result = expr.eval();
                 println!("Result : {:?}", result);
-            } else {
-                /*
-                   ---REMARQUE :
-                   Vérifie si l'input est bien vide au final
-
-                   ex:
-                       12))) -> invalide (Syntax incorrect on ")))")
-                       12    -> valide
-
-
-                  
-                */
-                println!("Syntax incorrect on \"{rest}\"");
-            }
+                if !rest.is_empty(){
+                    println!("input_reste : \"{rest}\"");
+                }
+                
+            
         }
         Err(_) => {
             println!("Parsing impossible")
