@@ -1,3 +1,5 @@
+//mathtools personnel :
+
 pub fn my_abs(nb: f64) -> f64 {
     if nb < 0.0 { -nb } else { nb }
 }
