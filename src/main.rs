@@ -253,6 +253,9 @@ fn main() {
     // RESULTAT / OUTPUT:
     let v = parse_expr(a);
 
+    /*  ---REMARQUE :
+                    Si vouler tester (parse_term) ou (parse_factor) remplacer cette condition!!
+     */
     match v {
         Ok((rest, expr)) => {
             if rest.is_empty() {
@@ -268,6 +271,8 @@ fn main() {
                        12))) -> invalide (Syntax incorrect on ")))")
                        12    -> valide
 
+
+                  
                 */
                 println!("Syntax incorrect on \"{rest}\"");
             }
