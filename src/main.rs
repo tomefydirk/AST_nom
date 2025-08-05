@@ -1,5 +1,5 @@
+use nom::IResult;
 use nom::error::Error;
-use nom::{IResult};
 mod stringtool;
 use stringtool::{Token, scan_token};
 
@@ -98,7 +98,7 @@ impl Expr {
                 }
             }
             Expr::Negate(expr) => -expr.eval(),
-            Expr::Ln(expr) =>expr.eval().ln(),
+            Expr::Ln(expr) => expr.eval().ln(),
             Expr::Sqrt(expr) => expr.eval().sqrt(),
         }
     }
@@ -163,7 +163,7 @@ pub fn parse_term(mut input: &str) -> IResult<&str, Box<Expr>> {
         match scaned.1 {
             Token::Number(a) => {
                 println!("Erreur here {a},input::{input}");
-            },
+            }
             Token::Other(str_token) => {
                 if str_token == "+" || str_token == "-" {
                     return Expr::result_from_current(input, current_expr);
@@ -171,8 +171,8 @@ pub fn parse_term(mut input: &str) -> IResult<&str, Box<Expr>> {
                     (input, _) = scaned;
 
                     if str_token == "*" || str_token == "/" {
-                        let next_factor=parse_factor(input)?;
-                        input=next_factor.0;
+                        let next_factor = parse_factor(input)?;
+                        input = next_factor.0;
                         current_expr = Expr::box_binop_from(
                             current_expr,
                             next_factor.1,
@@ -196,17 +196,15 @@ pub fn parse_real_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
     (input, next_token) = scan_token(input)?;
 
     match next_token {
-        Token::Number(_) => {
-           Err(nom::Err::Error(Error::new(
-                input,
-                nom::error::ErrorKind::Digit,
-            )))
-        }
+        Token::Number(_) => Err(nom::Err::Error(Error::new(
+            input,
+            nom::error::ErrorKind::Digit,
+        ))),
         Token::Other(str_token) => {
             if str_token == ")" {
-              Expr::result_from_current(input, scaned.1)
+                Expr::result_from_current(input, scaned.1)
             } else {
-               Err(nom::Err::Error(Error::new(
+                Err(nom::Err::Error(Error::new(
                     input,
                     nom::error::ErrorKind::Digit,
                 )))
@@ -216,17 +214,15 @@ pub fn parse_real_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
 }
 /*----parse le facteur suivant---*/
 pub fn parse_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
-    let  next_token;
+    let next_token;
 
     (input, next_token) = scan_token(input)?;
 
     match next_token {
-        Token::Number(n) => {
-           Expr::result_number(input, n)
-        }
+        Token::Number(n) => Expr::result_number(input, n),
         Token::Other(str_token) => {
             if str_token == "(" {
-               parse_real_factor(input)
+                parse_real_factor(input)
             } else if str_token == "-" || str_token == "V" || str_token == "ln" {
                 //RECURSIVITÉ :
                 let perm = parse_factor(input);
@@ -240,11 +236,10 @@ pub fn parse_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
             }
         }
     }
-    
 }
 fn main() {
     // ENTRÉE / INPUT :
-    let a = "V(1+1*3+2+3)";
+    let a = "V(1+1*3+2+3.000)";
 
     // RESULTAT / OUTPUT:
     let v = parse_expr(a);

@@ -2,14 +2,10 @@ use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::character::complete::{digit1, space0};
 use nom::combinator::opt;
-use nom::{ IResult,  Parser};
-
-
-
+use nom::{IResult, Parser};
 
 pub fn tag_other_token(input: &str) -> IResult<&str, Token> {
-    let a=alt(
-        (
+    let a = alt((
         tag("-"),
         tag("+"),
         tag("*"),
@@ -18,11 +14,11 @@ pub fn tag_other_token(input: &str) -> IResult<&str, Token> {
         tag(")"),
         tag("ln"),
         tag("V"),
-        space0
-        )
-    ).parse(input)?;
+        space0,
+    ))
+    .parse(input)?;
 
-    Ok((a.0,Token::Other(a.1)))
+    Ok((a.0, Token::Other(a.1)))
 }
 pub fn scan_float(input: &str) -> IResult<&str, Token> {
     let (rest, first_part) = digit1(input)?;
@@ -44,16 +40,9 @@ pub fn scan_float(input: &str) -> IResult<&str, Token> {
         ))
     }
 }
-pub fn scan_token(input: &str)-> IResult<&str, Token>{
-    alt(
-        (scan_float,
-        tag_other_token)
-    ).parse(input)
+pub fn scan_token(input: &str) -> IResult<&str, Token> {
+    alt((scan_float, tag_other_token)).parse(input)
 }
-
-
-
-
 
 pub enum Token<'a> {
     Number(f64),
@@ -64,7 +53,5 @@ pub enum Token<'a> {
 mod test {
 
     #[test]
-    fn test1() {
-        
-    }
+    fn test1() {}
 }
