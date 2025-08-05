@@ -106,6 +106,8 @@ impl Expr {
 
 pub fn parse_expr(mut input: &str) -> IResult<&str, Box<Expr>> {
     let mut next_token = Token::Other("");
+
+    input = input.trim();
     let perm = parse_term(input);
     let (aff_perm, real_perm) = perm?;
 
@@ -136,6 +138,7 @@ pub fn parse_expr(mut input: &str) -> IResult<&str, Box<Expr>> {
             //Condition d'arrêt
             return Expr::result_from_current(input, current_expr);
         }
+
         (input, next_token) = stringtool::scan_token(input)?;
     }
 }
@@ -183,14 +186,16 @@ pub fn parse_term(mut input: &str) -> IResult<&str, Box<Expr>> {
             }
         }
 
-        if input.is_empty() {
+        if input.is_empty() || input.starts_with(')') {
             return Expr::result_from_current(input, current_expr);
         }
     }
 }
 pub fn parse_real_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
     let next_token;
+
     let scaned = parse_expr(input)?;
+
     input = scaned.0;
 
     (input, next_token) = scan_token(input)?;
@@ -215,7 +220,6 @@ pub fn parse_real_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
 /*----parse le facteur suivant---*/
 pub fn parse_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
     let next_token;
-
     (input, next_token) = scan_token(input)?;
 
     match next_token {
@@ -239,7 +243,7 @@ pub fn parse_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
 }
 fn main() {
     // ENTRÉE / INPUT :
-    let a = "2 - 2 ";
+    let a = "(2*3)/6";
 
     // RESULTAT / OUTPUT:
     let v = parse_expr(a);
@@ -256,7 +260,7 @@ fn main() {
 
     match v {
         Ok((rest, expr)) => {
-            println!("{:?}", expr);
+            println!("Expr : {:?}", expr);
             let result = expr.eval();
             println!("Result : {:?}", result);
             if !rest.is_empty() {
