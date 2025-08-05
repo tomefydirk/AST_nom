@@ -239,7 +239,7 @@ pub fn parse_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
 }
 fn main() {
     // ENTRÉE / INPUT :
-    let a = "V(1+1*3+2+3.000)";
+    let a = "2 - 2 ";
 
     // RESULTAT / OUTPUT:
     let v = parse_expr(a);
