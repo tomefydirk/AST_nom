@@ -1,10 +1,7 @@
-use nom::character::complete::space0;
 use nom::error::Error;
-use nom::{IResult, Parser, branch::alt, bytes::complete::tag, character::complete::digit1};
-use std::str::FromStr;
-mod mathtools;
-use mathtools::*;
+use nom::{IResult};
 mod stringtool;
+use stringtool::{Token, scan_token};
 
 //RULES
 /*
@@ -101,56 +98,14 @@ impl Expr {
                 }
             }
             Expr::Negate(expr) => -expr.eval(),
-            Expr::Ln(expr) => my_ln(expr.eval()),
-            Expr::Sqrt(expr) => my_sqrt(expr.eval()),
+            Expr::Ln(expr) =>expr.eval().ln(),
+            Expr::Sqrt(expr) => expr.eval().sqrt(),
         }
     }
 }
 
-//fonction utilitaire pour scan_token {
-pub fn scan_plus(input: &str) -> IResult<&str, &str> {
-    tag("+")(input)
-}
-pub fn scan_moins(input: &str) -> IResult<&str, &str> {
-    tag("-")(input)
-}
-pub fn scan_div(input: &str) -> IResult<&str, &str> {
-    tag("/")(input)
-}
-pub fn scan_fois(input: &str) -> IResult<&str, &str> {
-    tag("*")(input)
-}
-pub fn parens0(input: &str) -> IResult<&str, &str> {
-    tag("(")(input)
-}
-pub fn parens1(input: &str) -> IResult<&str, &str> {
-    tag(")")(input)
-}
-pub fn scan_digit(input: &str) -> IResult<&str, &str> {
-    digit1(input)
-}
-
-//optionnel !!
-
-pub fn scan_ln(input: &str) -> IResult<&str, &str> {
-    tag("ln")(input)
-}
-pub fn scan_sqrt(input: &str) -> IResult<&str, &str> {
-    tag("V")(input)
-}
-
-// }
-
-pub fn scantoken(input: &str) -> IResult<&str, &str> {
-    alt((
-        scan_ln, scan_sqrt, scan_digit, scan_plus, scan_moins, scan_div, scan_fois, parens0,
-        parens1, space0,
-    ))
-    .parse(input.trim())
-}
-
 pub fn parse_expr(mut input: &str) -> IResult<&str, Box<Expr>> {
-    let mut next_token = "";
+    let mut next_token = Token::Other("");
     let perm = parse_term(input);
     let (aff_perm, real_perm) = perm?;
 
@@ -159,17 +114,29 @@ pub fn parse_expr(mut input: &str) -> IResult<&str, Box<Expr>> {
     input = aff_perm;
 
     loop {
-        if next_token == "+" || next_token == "-" {
-            let scaned = parse_term(input)?;
-            input = scaned.0;
-            current_expr =
-                Expr::box_binop_from(current_expr, scaned.1, BinOp::from_str(next_token));
+        match next_token {
+            Token::Number(_) => {
+                println!("Erreur de syntaxe");
+                return Err(nom::Err::Error(Error::new(
+                    input,
+                    nom::error::ErrorKind::Digit,
+                )));
+            }
+            Token::Other(str) => {
+                if str == "+" || str == "-" {
+                    let scaned = parse_term(input)?;
+                    input = scaned.0;
+                    current_expr =
+                        Expr::box_binop_from(current_expr, scaned.1, BinOp::from_str(str));
+                }
+            }
         }
+
         if input.is_empty() || input.starts_with(")") {
             //Condition d'arrêt
             return Expr::result_from_current(input, current_expr);
         }
-        (input, next_token) = scantoken(input)?;
+        (input, next_token) = stringtool::scan_token(input)?;
     }
 }
 
@@ -177,8 +144,6 @@ pub fn parse_expr(mut input: &str) -> IResult<&str, Box<Expr>> {
     ex:12*4+3 --parse_term--> return 12*4
 */
 pub fn parse_term(mut input: &str) -> IResult<&str, Box<Expr>> {
-    let mut next_token;
-
     let perm = parse_factor(input);
     let (aff_perm, real_perm) = perm?;
 
@@ -194,89 +159,114 @@ pub fn parse_term(mut input: &str) -> IResult<&str, Box<Expr>> {
         return Expr::result_from_current(input, current_expr);
     }
     loop {
-        let scaned = scantoken(input)?;
-        if scaned.1 == "+" || scaned.1 == "-" {
-            return Expr::result_from_current(input, current_expr);
-        } else {
-            (input, next_token) = scaned;
+        let scaned = stringtool::scan_token(input)?;
+        match scaned.1 {
+            Token::Number(a) => {
+                println!("Erreur here {a},input::{input}");
+            },
+            Token::Other(str_token) => {
+                if str_token == "+" || str_token == "-" {
+                    return Expr::result_from_current(input, current_expr);
+                } else {
+                    (input, _) = scaned;
+
+                    if str_token == "*" || str_token == "/" {
+                        let next_factor=parse_factor(input)?;
+                        input=next_factor.0;
+                        current_expr = Expr::box_binop_from(
+                            current_expr,
+                            next_factor.1,
+                            BinOp::from_str(str_token),
+                        );
+                    }
+                }
+            }
         }
 
         if input.is_empty() {
             return Expr::result_from_current(input, current_expr);
         }
-        if next_token == "*" || next_token == "/" {
-            current_expr = Expr::box_binop_from(
-                current_expr,
-                parse_factor(input)?.1,
-                BinOp::from_str(next_token),
-            );
+    }
+}
+pub fn parse_real_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
+    let next_token;
+    let scaned = parse_expr(input)?;
+    input = scaned.0;
+
+    (input, next_token) = scan_token(input)?;
+
+    match next_token {
+        Token::Number(_) => {
+           Err(nom::Err::Error(Error::new(
+                input,
+                nom::error::ErrorKind::Digit,
+            )))
+        }
+        Token::Other(str_token) => {
+            if str_token == ")" {
+              Expr::result_from_current(input, scaned.1)
+            } else {
+               Err(nom::Err::Error(Error::new(
+                    input,
+                    nom::error::ErrorKind::Digit,
+                )))
+            }
         }
     }
 }
 /*----parse le facteur suivant---*/
 pub fn parse_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
-    let mut next_token;
+    let  next_token;
 
-    (input, next_token) = scantoken(input)?;
+    (input, next_token) = scan_token(input)?;
 
-    if next_token.parse::<f64>().is_ok() {
-        let n = f64::from_str(next_token).unwrap();
-        Expr::result_number(input, n)
-    } else if next_token == "(" {
-        let scaned = parse_expr(input)?;
-        input = scaned.0;
-
-        (input, next_token) = scantoken(input)?;
-
-        if next_token == ")" {
-            return Expr::result_from_current(input, scaned.1);
-        } else {
-            return Err(nom::Err::Error(Error::new(
-                input,
-                nom::error::ErrorKind::Digit,
-            )));
+    match next_token {
+        Token::Number(n) => {
+           Expr::result_number(input, n)
         }
-    } else if next_token == "-" || next_token == "V" || next_token == "ln" {
-        //RECURSIVITÉ :
-        let perm = parse_factor(input);
-        let (aff_perm, real_perm) = perm?;
-        return IResult::Ok((aff_perm, Expr::box_factorop_from(real_perm, next_token)));
-    } else {
-        return Err(nom::Err::Error(Error::new(
-            input,
-            nom::error::ErrorKind::Digit,
-        )));
+        Token::Other(str_token) => {
+            if str_token == "(" {
+               parse_real_factor(input)
+            } else if str_token == "-" || str_token == "V" || str_token == "ln" {
+                //RECURSIVITÉ :
+                let perm = parse_factor(input);
+                let (aff_perm, real_perm) = perm?;
+                return IResult::Ok((aff_perm, Expr::box_factorop_from(real_perm, str_token)));
+            } else {
+                return Err(nom::Err::Error(Error::new(
+                    input,
+                    nom::error::ErrorKind::Digit,
+                )));
+            }
+        }
     }
+    
 }
 fn main() {
     // ENTRÉE / INPUT :
-    let a = "(2+3)*2---10";
+    let a = "(2+3)*2---10.01";
 
     // RESULTAT / OUTPUT:
     let v = parse_expr(a);
     /*
-        vous pouver aussi tester:
+       vous pouver aussi tester:
 
 
-            let v = parse_term(a);
-                    ou 
-            let v = parse_factor(a);
+           let v = parse_term(a);
+                   ou
+           let v = parse_factor(a);
 
-        quels est la différence d'après vous ?
-     */
+       quels est la différence d'après vous ?
+    */
 
-    
     match v {
         Ok((rest, expr)) => {
-           
-                println!("{:?}", expr);
-                let result = expr.eval();
-                println!("Result : {:?}", result);
-                if !rest.is_empty(){
-                    println!("input_reste : \"{rest}\"");
-                }
-                
-            
+            println!("{:?}", expr);
+            let result = expr.eval();
+            println!("Result : {:?}", result);
+            if !rest.is_empty() {
+                println!("input_reste : \"{rest}\"");
+            }
         }
         Err(_) => {
             println!("Parsing impossible")
