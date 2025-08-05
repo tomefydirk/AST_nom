@@ -1,63 +1,70 @@
 use nom::branch::alt;
-use nom::error::{Error, ErrorKind};
-use nom::{IResult, Parser};
+use nom::bytes::complete::tag;
+use nom::character::complete::{digit1, space0};
+use nom::combinator::opt;
+use nom::{ IResult,  Parser};
 
-pub struct Tokeniser {
 
+
+
+pub fn tag_other_token(input: &str) -> IResult<&str, Token> {
+    let a=alt(
+        (
+        tag("-"),
+        tag("+"),
+        tag("*"),
+        tag("/"),
+        tag("("),
+        tag(")"),
+        tag("ln"),
+        tag("V"),
+        space0
+        )
+    ).parse(input)?;
+
+    Ok((a.0,Token::Other(a.1)))
 }
-
-pub fn my_tag(input: String, pat: String) -> IResult<String, String> {
-    if input.starts_with(&pat) {
-        let rest = input[pat.len()..].to_string();
-        Ok((rest, pat))
+pub fn scan_float(input: &str) -> IResult<&str, Token> {
+    let (rest, first_part) = digit1(input)?;
+    let (rest2, point) = opt(tag(".")).parse(rest)?;
+    if point.is_some() {
+        let (rest3, second_part) = digit1(rest2)?;
+        Ok((
+            rest3,
+            Token::Number(format!("{first_part}.{second_part}").parse().map_err(|_| {
+                nom::Err::Error(nom::error::Error::new(input, nom::error::ErrorKind::Digit))
+            })?),
+        ))
     } else {
-        Err(nom::Err::Error(Error::new(input, ErrorKind::Tag)))
+        Ok((
+            rest,
+            Token::Number(format!("{first_part}.0").parse().map_err(|_| {
+                nom::Err::Error(nom::error::Error::new(input, nom::error::ErrorKind::Digit))
+            })?),
+        ))
     }
 }
-
-pub fn my_alt(input: String, patterns: Vec<String>) -> IResult<String, String> {
-    for pat in patterns {
-        match my_tag(input.clone(), pat.clone()) {
-            Ok(ok) => return Ok(ok),
-            Err(_) => continue,
-        }
-    }
-
-    Err(nom::Err::Error(nom::error::Error::new(input, ErrorKind::Alt)))
+pub fn scan_token(input: &str)-> IResult<&str, Token>{
+    alt(
+        (scan_float,
+        tag_other_token)
+    ).parse(input)
 }
 
 
 
-impl Parser<String> for Tokeniser {
-    type Output = Token;
 
-    type Error = Error<String>;
 
-    fn process<OM: nom::OutputMode>(
-        &mut self,
-        input: String,
-    ) -> nom::PResult<OM, String, Self::Output, Self::Error> {
-        todo!()
-    }
-}
-//todo()!
-pub enum Token {
+pub enum Token<'a> {
     Number(f64),
-    Other(String),
+    Other(&'a str),
 }
 
 #[cfg(test)]
 mod test {
-    use crate::stringtool::my_tag;
 
     #[test]
     fn test1() {
-        println!("HERE");
-        let a = String::from("))12");
-        let b = String::from("))");
-
-        let result = my_tag(a, b);
-
-        println!("{:?}",result);
+        
     }
 }
