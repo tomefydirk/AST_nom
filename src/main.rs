@@ -5,12 +5,14 @@ mod tokentool;
 use crate::expr_function::{parse_expr};
 //RULES
 /*
-E : E - T  | E + T | T
-T : F*T    | F/T | F
+E : T - T  | T + T | T
+T : P*P    | P/P | P
+P : F^F    | F
 F : Number | (E) | -E | functionE
 
 E:Expression
 T:Term
+P:Power
 F:Factor
 
 function : ln | sqrt | cos | sin | abs
