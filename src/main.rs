@@ -20,7 +20,7 @@ function : ln | sqrt | cos | sin | abs
 
 fn main() {
     // ENTRÉE / INPUT :
-    let a = "V(2*5^2)";
+    let a = "(2)(3)";
 
     // RESULTAT / OUTPUT:
     let v = parse_expr(a);

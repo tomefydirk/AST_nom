@@ -104,11 +104,12 @@ pub fn parse_power(mut input: &str) -> IResult<&str, Box<Expr>>{
         let scaned = scan_token(input)?;
         match scaned.1 {
             Token::Number(_) => {
-                  
+                    return Expr::result_from_current(input, current_expr);
             }
             Token::Other(str_token) => {
-                if str_token == "+" || str_token == "-" || str_token == ")" || str_token == "*" || str_token == "/" {
+                if str_token == "+" || str_token == "-" || str_token == ")" || str_token == "*" || str_token == "/" || str_token=="("{
                     return Expr::result_from_current(input, current_expr);
+                  
                 } else {
                     (input, _) = scaned;
                     if str_token == "^" {
