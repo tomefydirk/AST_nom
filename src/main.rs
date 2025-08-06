@@ -15,7 +15,7 @@ F:Factor
 
 fn main() {
     // ENTRÉE / INPUT :
-    let a = "PI-PI";
+    let a = "PI^(-2.01)";
 
     // RESULTAT / OUTPUT:
     let v = parse_expr(a);

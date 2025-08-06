@@ -19,6 +19,7 @@ pub enum BinOp {
     Sub,
     Mul,
     Div,
+    Pow,
 }
 impl BinOp {
     pub fn from_str(a: &str) -> Self {
@@ -27,6 +28,7 @@ impl BinOp {
             "-" => BinOp::Sub,
             "*" => BinOp::Mul,
             "/" => BinOp::Div,
+            "^" => BinOp::Pow,
             _ => BinOp::Add,
         }
     }
@@ -85,6 +87,7 @@ impl Expr {
                         }
                         l / r
                     }
+                    BinOp::Pow => l.powf(r),
                 }
             }
             Expr::Negate(expr) => -expr.eval(),
