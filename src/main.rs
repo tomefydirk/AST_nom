@@ -1,8 +1,7 @@
-
-mod tokentool;
 mod expr_function;
 mod expr_struct;
-use expr_function::{parse_expr};
+mod tokentool;
+use expr_function::parse_expr;
 //RULES
 /*
 E : E - T  | E + T | T
@@ -16,7 +15,7 @@ F:Factor
 
 fn main() {
     // ENTRÉE / INPUT :
-    let a = "  (ln(2) -   ln(2) ) --1";
+    let a = "  (ln(2)*2 -   (ln(2)*  2) ) --1";
 
     // RESULTAT / OUTPUT:
     let v = parse_expr(a);

@@ -1,6 +1,5 @@
 use nom::IResult;
 
-
 #[derive(Debug)]
 pub enum Expr {
     Number(f64),
@@ -35,7 +34,11 @@ impl BinOp {
 
 impl Expr {
     //binary operation
-    pub fn box_binop_from(left_box: Box<Expr>, right_box: Box<Expr>, operation: BinOp) -> Box<Expr> {
+    pub fn box_binop_from(
+        left_box: Box<Expr>,
+        right_box: Box<Expr>,
+        operation: BinOp,
+    ) -> Box<Expr> {
         Box::new(Expr::BinaryOp {
             left: left_box,
             op: operation,
