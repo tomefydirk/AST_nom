@@ -51,7 +51,9 @@ pub fn tag_other_token(input: &str) -> IResult<&str, Token> {
 
 pub fn scan_token(mut input: &str) -> IResult<&str, Token> {
     input = input.trim();
-    alt((scan_float, tag_other_token)).parse(input)
+    let a = alt((scan_float, tag_other_token)).parse(input)?;
+
+    Ok((a.0.trim(), a.1))
 }
 
 //Enum pour les token :

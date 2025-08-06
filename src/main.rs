@@ -107,7 +107,6 @@ impl Expr {
 pub fn parse_expr(mut input: &str) -> IResult<&str, Box<Expr>> {
     let mut next_token = Token::Other("");
 
-    input = input.trim();
     let perm = parse_term(input);
     let (aff_perm, real_perm) = perm?;
 
@@ -168,14 +167,14 @@ pub fn parse_term(mut input: &str) -> IResult<&str, Box<Expr>> {
                 println!("Erreur here {a},input::{input}");
             }
             Token::Other(str_token) => {
-                if str_token == "+" || str_token == "-" {
+                if str_token == "+" || str_token == "-" || str_token == ")" {
                     return Expr::result_from_current(input, current_expr);
                 } else {
                     (input, _) = scaned;
-
                     if str_token == "*" || str_token == "/" {
                         let next_factor = parse_factor(input)?;
                         input = next_factor.0;
+
                         current_expr = Expr::box_binop_from(
                             current_expr,
                             next_factor.1,
@@ -185,7 +184,6 @@ pub fn parse_term(mut input: &str) -> IResult<&str, Box<Expr>> {
                 }
             }
         }
-
         if input.is_empty() || input.starts_with(')') {
             return Expr::result_from_current(input, current_expr);
         }
@@ -243,7 +241,7 @@ pub fn parse_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
 }
 fn main() {
     // ENTRÉE / INPUT :
-    let a = "(2*3)/6";
+    let a = "  (ln(2) -   ln(2) ) --1";
 
     // RESULTAT / OUTPUT:
     let v = parse_expr(a);
