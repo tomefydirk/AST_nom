@@ -18,7 +18,7 @@ function : ln | sqrt | cos | sin | abs
 
 fn main() {
     // ENTRÉE / INPUT :
-    let a = "2 * 3 ^ 2";
+    let a = "V(2*5^2)";
 
     // RESULTAT / OUTPUT:
     let v = parse_expr(a);
