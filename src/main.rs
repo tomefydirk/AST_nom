@@ -28,9 +28,11 @@ fn main() {
        vous pouver aussi tester:
 
 
-           let v = parse_term(a);
+            let v = parse_term(a);
                    ou
-           let v = parse_factor(a);
+            let v = parse_factor(a);
+                   ou 
+            let v = parse_power(a);
 
        quels est la différence d'après vous ?
     */
