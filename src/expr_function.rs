@@ -41,7 +41,6 @@ pub fn parse_expr(mut input: &str) -> IResult<&str, Box<Expr>> {
         (input, next_token) = scan_token(input)?;
     }
 }
-
 //parse le term suivant :
 pub fn parse_term(mut input: &str) -> IResult<&str, Box<Expr>> {
     let perm = parse_factor(input);
@@ -89,7 +88,9 @@ pub fn parse_term(mut input: &str) -> IResult<&str, Box<Expr>> {
         }
     }
 }
-
+pub fn parse_power(mut input: &str) -> IResult<&str, Box<Expr>>{
+    todo!()
+}
 //parse le facteur suivant : {
 pub fn parse_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
     let next_token;
