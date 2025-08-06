@@ -6,16 +6,18 @@ use expr_function::parse_expr;
 /*
 E : E - T  | E + T | T
 T : F*T    | F/T | F
-F : Number | (E) | -E | lnE | VE
+F : Number | (E) | -E | functionE
 
 E:Expression
 T:Term
 F:Factor
+
+function : ln | sqrt
 */
 
 fn main() {
     // ENTRÉE / INPUT :
-    let a = "PI^(-2.01)";
+    let a = "(ln(E^((2)*(2)/(2^2)))-1)/(E/E)";
 
     // RESULTAT / OUTPUT:
     let v = parse_expr(a);

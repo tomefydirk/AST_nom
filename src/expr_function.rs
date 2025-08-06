@@ -65,7 +65,7 @@ pub fn parse_term(mut input: &str) -> IResult<&str, Box<Expr>> {
                     return Expr::result_from_current(input, current_expr);
                 } else {
                     (input, _) = scaned;
-                    if str_token == "*" || str_token == "/" || str_token=="^"{
+                    if str_token == "*" || str_token == "/" || str_token == "^" {
                         let next_factor = parse_factor(input)?;
                         input = next_factor.0;
 
