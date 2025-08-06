@@ -12,7 +12,8 @@ pub enum Expr {
     Ln(Box<Expr>),
     Sqrt(Box<Expr>),
     Cos(Box<Expr>),
-    Sin(Box<Expr>)
+    Sin(Box<Expr>),
+    Abs(Box<Expr>)
 }
 
 #[derive(Debug)]
@@ -58,6 +59,7 @@ impl Expr {
             "-" => Box::new(Expr::Negate(current_expr)),
             "cos"=>Box::new(Expr::Cos(current_expr)),
             "sin"=>Box::new(Expr::Sin(current_expr)),
+            "abs" => Box::new(Expr::Abs(current_expr)),
             a => {
                 println!("operateur non trouvé :: {a}");
                 Box::new(Expr::Negate(current_expr))
@@ -73,7 +75,7 @@ impl Expr {
         IResult::Ok((input, current_expr))
     }
     pub fn is_factor_op(str_token: &str)->bool{
-        str_token == "-" || str_token == "V" || str_token == "ln" || str_token=="cos" || str_token=="sin"
+        str_token == "-" || str_token == "V" || str_token == "ln" || str_token=="cos" || str_token=="sin" || str_token=="abs"
     }
 }
 impl Expr {
@@ -101,7 +103,8 @@ impl Expr {
             Expr::Ln(expr) => expr.eval().ln(),
             Expr::Sqrt(expr) => expr.eval().sqrt(),
             Expr::Cos(expr) => expr.eval().cos(),
-            Expr::Sin(expr) => expr.eval().sin()
+            Expr::Sin(expr) => expr.eval().sin(),
+            Expr::Abs(expr) => expr.eval().abs()
         }
     }
 }

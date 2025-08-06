@@ -1,7 +1,8 @@
 mod expr_function;
 mod expr_struct;
 mod tokentool;
-use expr_function::parse_expr;
+
+use crate::expr_function::{parse_expr};
 //RULES
 /*
 E : E - T  | E + T | T
@@ -12,12 +13,12 @@ E:Expression
 T:Term
 F:Factor
 
-function : ln | sqrt | cos | sin
+function : ln | sqrt | cos | sin | abs
 */
 
 fn main() {
     // ENTRÉE / INPUT :
-    let a = "cos(PI/2)";
+    let a = "(1+2)2+1";
 
     // RESULTAT / OUTPUT:
     let v = parse_expr(a);

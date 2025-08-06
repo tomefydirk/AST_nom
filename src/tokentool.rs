@@ -4,9 +4,7 @@ use nom::character::complete::{digit1, space0};
 use nom::combinator::opt;
 use nom::error::Error;
 use nom::{IResult, Parser};
-use std::f64::consts::E;
-use std::f64::consts::PI;
-
+use std::f64::consts::{E,PI};
 /*
 Explication :
     un "token" peut etre un "float"(f64) ou ('-','+','*','/','(',')','ln','V') appelé "other_token"
@@ -43,7 +41,7 @@ pub fn scan_constant(input: &str) -> IResult<&str, Token> {
     } else if a.1 == "PI" {
         let r = PI;
         Ok((a.0, Token::Number(r)))
-    } else {
+    }else {
         Err(nom::Err::Error(Error::new(
             input,
             nom::error::ErrorKind::Digit,
@@ -55,7 +53,8 @@ pub fn tag_function(input: &str) -> IResult<&str, Token>{
         tag("ln"),
         tag("V"),
         tag("cos"),
-        tag("sin")
+        tag("sin"),
+        tag("abs")
     ))
     .parse(input)?;
 
