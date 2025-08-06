@@ -94,7 +94,7 @@ pub fn parse_factor(mut input: &str) -> IResult<&str, Box<Expr>> {
         Token::Other(str_token) => {
             if str_token == "(" {
                 parse_real_factor(input)
-            } else if str_token == "-" || str_token == "V" || str_token == "ln" {
+            } else if Expr::is_factor_op(str_token) {
                 //RECURSIVITÉ :
                 let perm = parse_factor(input);
                 let (aff_perm, real_perm) = perm?;

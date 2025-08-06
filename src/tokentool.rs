@@ -50,6 +50,17 @@ pub fn scan_constant(input: &str) -> IResult<&str, Token> {
         )))
     }
 }
+pub fn tag_function(input: &str) -> IResult<&str, Token>{
+      let a = alt((
+        tag("ln"),
+        tag("V"),
+        tag("cos"),
+        tag("sin")
+    ))
+    .parse(input)?;
+
+    Ok((a.0, Token::Other(a.1)))  
+}
 pub fn tag_other_token(input: &str) -> IResult<&str, Token> {
     let a = alt((
         tag("-"),
@@ -59,8 +70,6 @@ pub fn tag_other_token(input: &str) -> IResult<&str, Token> {
         tag("^"),
         tag("("),
         tag(")"),
-        tag("ln"),
-        tag("V"),
         space0,
     ))
     .parse(input)?;
@@ -70,11 +79,10 @@ pub fn tag_other_token(input: &str) -> IResult<&str, Token> {
 
 pub fn scan_token(mut input: &str) -> IResult<&str, Token> {
     input = input.trim();
-    let a = alt((scan_float, scan_constant, tag_other_token)).parse(input)?;
+    let a = alt((scan_float, scan_constant, tag_function,tag_other_token)).parse(input)?;
 
     Ok((a.0.trim(), a.1))
 }
-
 //Enum pour les token :
 #[derive(Debug)]
 pub enum Token<'a> {

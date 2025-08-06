@@ -12,12 +12,12 @@ E:Expression
 T:Term
 F:Factor
 
-function : ln | sqrt
+function : ln | sqrt | cos | sin
 */
 
 fn main() {
     // ENTRÉE / INPUT :
-    let a = "(ln(E^((2)*(2)/(2^2)))-1)/(E/E)";
+    let a = "cos(PI/2)";
 
     // RESULTAT / OUTPUT:
     let v = parse_expr(a);
@@ -36,7 +36,7 @@ fn main() {
         Ok((rest, expr)) => {
             println!("Expr : {:?}", expr);
             let result = expr.eval();
-            println!("Result : {:?}", result);
+            println!("Result : {}", result);
             if !rest.is_empty() {
                 println!("input_reste : \"{rest}\"");
             }
