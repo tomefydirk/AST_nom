@@ -1,8 +1,7 @@
 mod expr_function;
 mod expr_struct;
 mod tokentool;
-
-use crate::expr_function::{parse_expr};
+use crate::expr_function::parse_expr;
 //RULES
 /*
 E : T - T  | T + T | T
@@ -20,7 +19,7 @@ function : ln | sqrt | cos | sin | abs
 
 fn main() {
     // ENTRÉE / INPUT :
-    let a = "(2)*(3^2)2";
+    let a = "(2)(3^2)";
 
     // RESULTAT / OUTPUT:
     let v = parse_expr(a);
@@ -31,7 +30,7 @@ fn main() {
             let v = parse_term(a);
                    ou
             let v = parse_factor(a);
-                   ou 
+                   ou
             let v = parse_power(a);
 
        quels est la différence d'après vous ?

@@ -2,11 +2,11 @@ use nom::IResult;
 use nom::error::Error;
 
 use crate::expr_struct::{BinOp, Expr};
-use crate::tokentool::{ scan_token, Token};
+use crate::tokentool::{Token, scan_token};
 
 //parse un expréssion :
 pub fn parse_expr(mut input: &str) -> IResult<&str, Box<Expr>> {
-    let mut next_token = Token::Other("");
+    let mut next_token ;
 
     let perm = parse_term(input);
     let (aff_perm, real_perm) = perm?;
@@ -15,7 +15,13 @@ pub fn parse_expr(mut input: &str) -> IResult<&str, Box<Expr>> {
 
     input = aff_perm;
 
+    if input.starts_with(')') {
+        return Expr::result_from_current(input, current_expr);
+    }
+    
     loop {
+        (input, next_token) = scan_token(input)?;
+        
         match next_token {
             Token::Number(n) => {
                 println!("Erreur de syntaxe le nombre:{n} semble posé problème");
@@ -38,7 +44,7 @@ pub fn parse_expr(mut input: &str) -> IResult<&str, Box<Expr>> {
             return Expr::result_from_current(input, current_expr);
         }
 
-        (input, next_token) = scan_token(input)?;
+        
     }
 }
 //parse le term suivant :
@@ -54,23 +60,23 @@ pub fn parse_term(mut input: &str) -> IResult<&str, Box<Expr>> {
         return Expr::result_from_current(input, current_expr);
     }
     loop {
-       
         let scaned = scan_token(input)?;
         match scaned.1 {
             Token::Number(n) => {
-                    input=scaned.0;
-                    current_expr=Expr::box_binop_from(current_expr, Box::new(Expr::Number(n)), BinOp::Mul)
+                input = scaned.0;
+                current_expr =
+                    Expr::box_binop_from(current_expr, Box::new(Expr::Number(n)), BinOp::Mul)
             }
             Token::Other(str_token) => {
                 if str_token == "+" || str_token == "-" || str_token == ")" {
                     return Expr::result_from_current(input, current_expr);
-                }else if str_token=="(" { 
+                } else if str_token == "(" {
                     let next_power = parse_power(input)?;
-                    input=next_power.0;
-                    current_expr=Expr::box_binop_from(current_expr,next_power.1 , BinOp::Mul)
+                    input = next_power.0;
+                    current_expr = Expr::box_binop_from(current_expr, next_power.1, BinOp::Mul)
                 } else {
                     (input, _) = scaned;
-                    if str_token == "*" || str_token == "/" || str_token == "^" {
+                    if str_token == "*" || str_token == "/" {
                         let next_power = parse_power(input)?;
                         input = next_power.0;
 
@@ -88,7 +94,7 @@ pub fn parse_term(mut input: &str) -> IResult<&str, Box<Expr>> {
         }
     }
 }
-pub fn parse_power(mut input: &str) -> IResult<&str, Box<Expr>>{
+pub fn parse_power(mut input: &str) -> IResult<&str, Box<Expr>> {
     let perm = parse_factor(input);
     let (aff_perm, real_perm) = perm?;
 
@@ -99,17 +105,21 @@ pub fn parse_power(mut input: &str) -> IResult<&str, Box<Expr>>{
     if input.starts_with(')') {
         return Expr::result_from_current(input, current_expr);
     }
-     loop {
-       
+    loop {
         let scaned = scan_token(input)?;
         match scaned.1 {
             Token::Number(_) => {
-                    return Expr::result_from_current(input, current_expr);
+                return Expr::result_from_current(input, current_expr);
             }
             Token::Other(str_token) => {
-                if str_token == "+" || str_token == "-" || str_token == ")" || str_token == "*" || str_token == "/" || str_token=="("{
+                if str_token == "+"
+                    || str_token == "-"
+                    || str_token == ")"
+                    || str_token == "*"
+                    || str_token == "/"
+                    || str_token == "("
+                {
                     return Expr::result_from_current(input, current_expr);
-                  
                 } else {
                     (input, _) = scaned;
                     if str_token == "^" {

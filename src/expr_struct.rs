@@ -13,7 +13,7 @@ pub enum Expr {
     Sqrt(Box<Expr>),
     Cos(Box<Expr>),
     Sin(Box<Expr>),
-    Abs(Box<Expr>)
+    Abs(Box<Expr>),
 }
 
 #[derive(Debug)]
@@ -57,8 +57,8 @@ impl Expr {
             "V" => Box::new(Expr::Sqrt(current_expr)),
             "ln" => Box::new(Expr::Ln(current_expr)),
             "-" => Box::new(Expr::Negate(current_expr)),
-            "cos"=>Box::new(Expr::Cos(current_expr)),
-            "sin"=>Box::new(Expr::Sin(current_expr)),
+            "cos" => Box::new(Expr::Cos(current_expr)),
+            "sin" => Box::new(Expr::Sin(current_expr)),
             "abs" => Box::new(Expr::Abs(current_expr)),
             a => {
                 println!("operateur non trouvé :: {a}");
@@ -74,8 +74,13 @@ impl Expr {
     pub fn result_from_current(input: &str, current_expr: Box<Expr>) -> IResult<&str, Box<Expr>> {
         IResult::Ok((input, current_expr))
     }
-    pub fn is_factor_op(str_token: &str)->bool{
-        str_token == "-" || str_token == "V" || str_token == "ln" || str_token=="cos" || str_token=="sin" || str_token=="abs"
+    pub fn is_factor_op(str_token: &str) -> bool {
+        str_token == "-"
+            || str_token == "V"
+            || str_token == "ln"
+            || str_token == "cos"
+            || str_token == "sin"
+            || str_token == "abs"
     }
 }
 impl Expr {
@@ -84,27 +89,27 @@ impl Expr {
         match self {
             Expr::Number(n) => *n,
             Expr::BinaryOp { left, op, right } => {
-                        let l = left.eval();
-                        let r = right.eval();
-                        match op {
-                            BinOp::Add => l + r,
-                            BinOp::Sub => l - r,
-                            BinOp::Mul => l * r,
-                            BinOp::Div => {
-                                if r == 0.0 {
-                                    panic!("Division par zéro !");
-                                }
-                                l / r
-                            }
-                            BinOp::Pow => l.powf(r),
+                let l = left.eval();
+                let r = right.eval();
+                match op {
+                    BinOp::Add => l + r,
+                    BinOp::Sub => l - r,
+                    BinOp::Mul => l * r,
+                    BinOp::Div => {
+                        if r == 0.0 {
+                            panic!("Division par zéro !");
                         }
+                        l / r
                     }
+                    BinOp::Pow => l.powf(r),
+                }
+            }
             Expr::Negate(expr) => -expr.eval(),
             Expr::Ln(expr) => expr.eval().ln(),
             Expr::Sqrt(expr) => expr.eval().sqrt(),
             Expr::Cos(expr) => expr.eval().cos(),
             Expr::Sin(expr) => expr.eval().sin(),
-            Expr::Abs(expr) => expr.eval().abs()
+            Expr::Abs(expr) => expr.eval().abs(),
         }
     }
 }

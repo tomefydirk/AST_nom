@@ -4,7 +4,7 @@ use nom::character::complete::{digit1, space0};
 use nom::combinator::opt;
 use nom::error::Error;
 use nom::{IResult, Parser};
-use std::f64::consts::{E,PI};
+use std::f64::consts::{E, PI};
 /*
 Explication :
     un "token" peut etre un "float"(f64) ou ('-','+','*','/','(',')','ln','V') appelé "other_token"
@@ -41,24 +41,17 @@ pub fn scan_constant(input: &str) -> IResult<&str, Token> {
     } else if a.1 == "PI" {
         let r = PI;
         Ok((a.0, Token::Number(r)))
-    }else {
+    } else {
         Err(nom::Err::Error(Error::new(
             input,
             nom::error::ErrorKind::Digit,
         )))
     }
 }
-pub fn tag_function(input: &str) -> IResult<&str, Token>{
-      let a = alt((
-        tag("ln"),
-        tag("V"),
-        tag("cos"),
-        tag("sin"),
-        tag("abs")
-    ))
-    .parse(input)?;
+pub fn tag_function(input: &str) -> IResult<&str, Token> {
+    let a = alt((tag("ln"), tag("V"), tag("cos"), tag("sin"), tag("abs"))).parse(input)?;
 
-    Ok((a.0, Token::Other(a.1)))  
+    Ok((a.0, Token::Other(a.1)))
 }
 pub fn tag_other_token(input: &str) -> IResult<&str, Token> {
     let a = alt((
@@ -78,7 +71,7 @@ pub fn tag_other_token(input: &str) -> IResult<&str, Token> {
 
 pub fn scan_token(mut input: &str) -> IResult<&str, Token> {
     input = input.trim();
-    let a = alt((scan_float, scan_constant, tag_function,tag_other_token)).parse(input)?;
+    let a = alt((scan_float, scan_constant, tag_function, tag_other_token)).parse(input)?;
 
     Ok((a.0.trim(), a.1))
 }
