@@ -27,6 +27,8 @@ where
                 current_expr = Expr::box_binop_from(current_expr, rhs, BinOp::from_str(op));
                 input_rem = after_rhs;
             }
+
+            //pour les cas implicite de multiplication (2)2 ou 2(2)
             Token::Number(n) => {
 
                 if ops.contains(&"*") {
