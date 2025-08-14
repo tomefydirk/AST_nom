@@ -19,7 +19,7 @@ function : ln | sqrt | cos | sin | abs
 
 fn main() {
     // ENTRÉE / INPUT :
-    let a = "(2)(3^2)";
+    let a = "ln(E)";
 
     // RESULTAT / OUTPUT:
     let v = parse_expr(a);
