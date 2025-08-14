@@ -2,8 +2,10 @@ use nom::IResult;
 use nom::error::Error;
 use crate::expr_struct::{BinOp, Expr};
 use crate::tokentool::{Token, scan_token};
-
-
+/* 
+rhs:Right hand side
+lhs:Left hand side
+*/
 fn parse_binop_level<'a, F>(
     input: &'a str,
     lower_parser: F,
